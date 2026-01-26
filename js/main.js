@@ -363,122 +363,99 @@ initParticleBackground();
 /* ===================================
    VIDEO SHOWCASE
    =================================== */
+/* ===================================
+   VIDEO SHOWCASE (CLOUD STREAMING)
+   =================================== */
 function initVideoShowcase() {
-    const videoData = [
-        {
-            src: 'assets/images/portfolio/videos/MR AND MISS DALGMCI 2025.mov',
-            title: 'Mr & Miss DALGMCI 2025',
-            desc: 'Event & Pageant Highlights'
-        },
-        {
-            src: 'assets/images/portfolio/videos/7th Bigkasin AVP.mp4',
-            title: '7th Bigkasin AVP',
-            desc: 'Audio Visual Presentation'
-        },
-        {
-            src: 'assets/images/portfolio/videos/Cuts by Darren.mp4',
-            title: 'Cuts by Darren',
-            desc: 'Stylized Editing Showcase'
-        },
-        {
-            src: 'assets/images/portfolio/videos/ICSLIS 2023 GENERAL ASSEMBLY SDE .mp4',
-            title: 'ICSLIS 2023 General Assembly',
-            desc: 'Same Day Edit Highlights'
-        },
-        {
-            src: 'assets/images/portfolio/videos/ICSLIS CHRISTMAS DECOR.mp4',
-            title: 'ICSLIS Christmas Decor',
-            desc: 'Event Coverage & Highlights'
-        },
-        {
-            src: 'assets/images/portfolio/videos/ICSLIS DAYS 2024 SDE .mp4',
-            title: 'ICSLIS Days 2024',
-            desc: 'Same Day Edit Cinematic'
-        },
-        {
-            src: 'assets/images/portfolio/videos/LUPANG HINIRANG AVP SFD.mp4',
-            title: 'Lupang Hinirang AVP',
-            desc: 'SFD Presentation'
-        },
-        {
-            src: 'assets/images/portfolio/videos/MR AND MISS FINAL OUTPUT.mp4',
-            title: 'Mr & Miss ICSLIS 2024 ',
-            desc: 'Production Output'
-        },
-        {
-            src: 'assets/images/portfolio/videos/PSI-SDG.mp4',
-            title: 'PSI-SDG Project',
-            desc: 'Proverbsville INC. SDG Project'
-        },
-        {
-            src: 'assets/images/portfolio/videos/SDE - MISTER AND MISS DALGMCI .mov',
-            title: 'SDE: Mr & Miss DALGMCI',
-            desc: 'DALGMCI 2025 SDE'
-        },
-        {
-            src: 'assets/images/portfolio/videos/SDE RY AND JO THE WEDDING.mp4',
-            title: 'Ry & Jo Wedding',
-            desc: 'RYAN AND JO WEDDING SDE'
-        },
-        {
-            src: 'assets/images/portfolio/videos/SFD SDE FINAL.mp4',
-            title: 'SFD Event SDE',
-            desc: 'Software Freedom Day 2023 SDE'
-        },
-        {
-            src: 'assets/images/portfolio/videos/National book Week 2025 (NBW 2025).mov',
-            title: 'NBW 2025',
-            desc: 'National Book Week 2025 SDE'
-        }
-    ];
-
-    let currentIndex = 0;
+    // CONFIGURATION: PASTE YOUR DETAILS HERE
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwiRlXNQf6Tx7IjHYjXjIAB_wHKVFx2Wrz2eJ1KeCnhZB4KZtELr6_LCw--Bf0Ck13P/exec'; 
+    const DRIVE_FOLDER_ID = '1xII4TUaNcpR7grgSRG3gIJxcdlF0ZbWa'; // The ID you provided
+    
+    // UI Elements
     const videoPlayer = document.getElementById('showcaseVideo');
     const prevBtn = document.getElementById('prevVideo');
     const nextBtn = document.getElementById('nextVideo');
     const currentNum = document.getElementById('videoCurrent');
+    const totalNum = document.getElementById('videoTotal');
     const title = document.getElementById('videoTitle');
     const desc = document.getElementById('videoDesc');
+    const overlay = document.querySelector('.video-overlay h3'); // Title overlay if visible
 
     if (!videoPlayer) return;
 
-    // Load initial video data
-    function loadInitial() {
-        const data = videoData[0];
-        // Don't auto-set src here to avoid double loading if HTML has it, 
-        // but we want to sync title/desc
-        title.textContent = data.title;
-        desc.textContent = data.desc;
+    let videoData = [];
+    let currentIndex = 0;
 
-        // Error handling for video
-        videoPlayer.addEventListener('error', () => {
-            // Fallback or user notification could go here
-            console.log("Video source not found: " + videoPlayer.src);
-        }, true);
-    }
-    loadInitial();
+    // Loading State
+    title.textContent = "Loading Videos...";
+    desc.textContent = "Fetching playlist from cloud...";
+    if (videoPlayer) videoPlayer.style.opacity = '0.5';
 
-    function updateVideo(index) {
+    // Fetch Video List from Google Apps Script
+    fetch(`${GOOGLE_SCRIPT_URL}?folderId=${DRIVE_FOLDER_ID}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                videoData = data;
+                totalNum.textContent = videoData.length;
+                
+                // Initialize first video
+                loadVideo(0);
+                
+                if (videoPlayer) videoPlayer.style.opacity = '1';
+                console.log("Loaded " + data.length + " videos from Drive.");
+            } else {
+                showError("No videos found in folder.");
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching playlist:', error);
+            // Fallback to local hardcoded list if cloud fails (Optional)
+            // For now, show error to prompt user configuration
+            title.textContent = "Setup Required";
+            desc.textContent = "Please configure the Google Script URL in js/main.js";
+        });
+
+    function loadVideo(index) {
+        if (index < 0 || index >= videoData.length) return;
+        
         const data = videoData[index];
-        videoPlayer.src = data.src;
-        title.textContent = data.title;
-        desc.textContent = data.desc;
-        currentNum.textContent = index + 1;
+        currentIndex = index;
 
-        // Auto play on switch? Maybe not to be intrusive, but user clicked next so maybe yes
-        videoPlayer.load();
-        videoPlayer.play().catch(e => console.log('Autoplay prevented', e));
+        // Update Text
+        title.textContent = data.title;
+        desc.textContent = data.desc || "Cloud Stream via Drive";
+        currentNum.textContent = currentIndex + 1;
+        
+        // FIX: Use Google Drive Embed/Preview URL for Iframes
+        // This is much more reliable than direct streaming links
+        let embedUrl = data.src;
+        try {
+            if (data.src.includes('id=')) {
+                const fileId = data.src.split('id=')[1];
+                // 'preview' is the mode for embeds
+                embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            }
+        } catch (e) {
+            console.error("Error parsing video ID", e);
+        }
+
+        console.log("Loading Embed: " + data.title + " -> " + embedUrl);
+        videoPlayer.src = embedUrl; 
     }
 
+    // Controls
     prevBtn.addEventListener('click', () => {
-        currentIndex--;
-        if (currentIndex < 0) currentIndex = videoData.length - 1;
-        updateVideo(currentIndex);
+        if (videoData.length === 0) return;
+        let newIndex = currentIndex - 1;
+        if (newIndex < 0) newIndex = videoData.length - 1;
+        loadVideo(newIndex);
     });
 
     nextBtn.addEventListener('click', () => {
-        currentIndex++;
-        if (currentIndex >= videoData.length) currentIndex = 0;
-        updateVideo(currentIndex);
+        if (videoData.length === 0) return;
+        let newIndex = currentIndex + 1;
+        if (newIndex >= videoData.length) newIndex = 0;
+        loadVideo(newIndex);
     });
 }

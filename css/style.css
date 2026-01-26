@@ -1427,6 +1427,13 @@ img {
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
 
+#showcaseVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
 /* GDrive Video Link Styles */
 .video-placeholder-link {
     width: 100%;
