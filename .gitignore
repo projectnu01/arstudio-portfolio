@@ -1,31 +1,11 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
-
-# Testing
-coverage/
-
-# Production
-build/
-dist/
-
-# Misc
-.DS_Store
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Large Video Files (Ignored to prevent GitHub size limits)
-*.mp4
+# Ignore large video files (over 100MB usually)
 *.mov
-*.avi
-*.mkv
-assets/images/portfolio/videos/
+*.mp4
+
+# Allow specific small video files
+!assets/images/portfolio/videos/ar.mp4
+
+# Standard ignores
+node_modules/
+.DS_Store
+*.log
